@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Об авторе проекта{% endblock %}
+{% block content %}
+{% load user_filters %}
+<main role="main" class="container">
+    <div class="row">
+        <div class="col-md-9">
+            <div class="card-body">
+                <div class="card-text">
+                    <p>Этот проект создан как часть обучения на платформе Yandex.Practicum.</p>
+                    <p>Благодаря туториалам, вебинарам, советам сокурсников в Slack и ревью
+                        мне удалось, <s>надеюсь</s>, далеко продвинуться в изучении Django, с помощью которого и
+                        сделан данный сайт.</p>
+                    <p>К сожалению, функциональность ещё пока не совсем хороша,
+                        но с каждой неделей она становится только лучше!</p>
+                    <hr>
+                    <p>Не уходите далеко, мне ещё есть чем вас удивить!</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+{% endblock %}

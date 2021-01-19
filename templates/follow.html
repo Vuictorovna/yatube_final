@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}Ваши подписки{% endblock %}
+
+{% block content %}
+<div class="container">
+
+    {% include "includes/menu.html" with index=True %}
+
+    <h2>Последние посты от авторов, за которыми вы следите</h2>
+
+    {% for post in page %}
+    {% include "includes/post_item.html" with post=post %}
+    {% endfor %}
+
+    {% if page.has_other_pages %}
+    {% include "includes/paginator.html" with items=page paginator=paginator%}
+    {% endif %}
+
+</div>
+{% endblock %}
