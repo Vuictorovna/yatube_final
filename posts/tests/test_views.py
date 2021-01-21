@@ -83,12 +83,20 @@ class TestPagesTests(TestCase):
     # Cache test
     def test_cache_index_page(self):
         """ Проверка работы кэша главной страницы """
-        index_1 = self.authorized_client.get("/")
+        index_1 = self.authorized_client.get(
+            reverse(
+                "index",
+            )
+        )
         Post.objects.create(
             text="Тестовый текст для проверки кэша",
             author=TestPagesTests.author,
         )
-        index_2 = self.authorized_client.get("/")
+        index_2 = self.authorized_client.get(
+            reverse(
+                "index",
+            )
+        )
 
         self.assertHTMLEqual(str(index_1.content), str(index_2.content))
 
@@ -143,7 +151,6 @@ class TestPagesTests(TestCase):
                 },
             )
         )
-
         form_fields = {
             "group": forms.fields.ChoiceField,
             "text": forms.fields.CharField,

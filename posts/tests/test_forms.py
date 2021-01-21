@@ -53,11 +53,17 @@ class PostFormTests(TestCase):
         }
 
         response = self.authorized_client.post(
-            reverse("new_post"), data=form_data, follow=True
+            reverse("new_post"), data=form_data
         )
 
-        self.assertRedirects(response, "/")
+        self.assertEqual(response.status_code, 302)
         self.assertEqual(Post.objects.count(), tasks_count + 1)
+
+        # check form's fields
+        post = Post.objects.get()
+        self.assertEqual(post.group.id, form_data["group"])
+        self.assertEqual(post.text, form_data["text"])
+        self.assertIsNotNone(post.image)
 
     def test_post_edit(self):
         """Валидная форма редактирует запись в Post"""

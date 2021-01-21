@@ -1,4 +1,5 @@
 from django.test import Client, TestCase
+from django.urls import reverse
 from posts.models import Group, Post, User
 
 
@@ -7,11 +8,11 @@ class StaticURLTests(TestCase):
         self.guest_client = Client()
 
     def test_about_author(self):
-        response = self.guest_client.get("/about/author/")
+        response = self.guest_client.get(reverse("about:author"))
         self.assertEqual(response.status_code, 200)
 
     def test_technologies(self):
-        response = self.guest_client.get("/about/tech/")
+        response = self.guest_client.get(reverse("about:tech"))
         self.assertEqual(response.status_code, 200)
 
 
@@ -40,8 +41,12 @@ class PostURLTests(TestCase):
     def test_urls_use_correct_template(self):
         """URL-адрес использует соответствующий шаблон"""
         templates_url_names = {
-            "index.html": "/",
-            "new.html": "/new/",
+            "index.html": reverse(
+                "index",
+            ),
+            "new.html": reverse(
+                "new_post",
+            ),
         }
         for template, reverse_name in templates_url_names.items():
             with self.subTest():
@@ -50,28 +55,60 @@ class PostURLTests(TestCase):
 
     def test_post_id_edit_uses_correct_template(self):
         """URL-адрес /username/post_id/edit/ использует соответствующий шаблон"""
-        post = PostURLTests.post
-
         response = self.authorized_author.get(
-            f"/{self.author.username}/{post.id}/edit/"
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            )
         )
         self.assertTemplateUsed(response, "new.html")
 
     # Status code tests
     def test_urls_status_code_anonymous(self):
         """Доступность страниц анонимному пользователю"""
-        post = PostURLTests.post
-        author = PostURLTests.author
-
         url_routes = {
-            "/": 200,
-            "/new/": 302,
-            f"/{self.user.username}/": 200,
-            f"/{author.username}/{post.id}/": 200,
-            f"/{author.username}/{post.id}/edit/": 302,
-            f"/{author.username}/{post.id}/comment/": 302,
-            f"/{author.username}/follow/": 302,
-            f"/{author.username}/unfollow/": 302,
+            reverse(
+                "index",
+            ): 200,
+            reverse(
+                "new_post",
+            ): 302,
+            reverse(
+                "profile",
+                kwargs={"username": PostURLTests.author},
+            ): 200,
+            reverse(
+                "post",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): 200,
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): 302,
+            reverse(
+                "add_comment",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): 302,
+            reverse(
+                "profile_follow",
+                kwargs={"username": PostURLTests.author},
+            ): 302,
+            reverse(
+                "profile_unfollow",
+                kwargs={"username": PostURLTests.author},
+            ): 302,
             "/something/really/weird/": 404,
         }
         for route, status_code in url_routes.items():
@@ -81,13 +118,20 @@ class PostURLTests(TestCase):
 
     def test_urls_status_code_authorized(self):
         """Доступность страниц авторизованному пользователю"""
-        post = PostURLTests.post
-        author = PostURLTests.author
-
         url_routes = {
-            "/": 200,
-            "/new/": 200,
-            f"/{author.username}/{post.id}/edit/": 302,
+            reverse(
+                "index",
+            ): 200,
+            reverse(
+                "new_post",
+            ): 200,
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): 302,
         }
         for route, status_code in url_routes.items():
             with self.subTest():
@@ -96,10 +140,14 @@ class PostURLTests(TestCase):
 
     def test_post_id_edit_url_status_code_author(self):
         """Страница /username/post_id/edit/ доступна автору"""
-        post = PostURLTests.post
-
         response = self.authorized_author.get(
-            f"/{self.author.username}/{post.id}/edit/"
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            )
         )
         self.assertEqual(response.status_code, 200)
 
@@ -107,13 +155,40 @@ class PostURLTests(TestCase):
     def test_urls_redirect_anonymous(self):
         """Данные страницы перенаправят анонимного
         пользователя на страницу логина"""
-        post = PostURLTests.post
-        author = PostURLTests.author
-
         url_routes = {
-            "/new/": "/auth/login/?next=/new/",
-            f"/{self.user.username}/{post.id}/edit/": f"/auth/login/?next=/{self.user.username}/{post.id}/edit/",
-            f"/{author.username}/{post.id}/comment/": f"/auth/login/?next=/{author.username}/{post.id}/comment/",
+            reverse("new_post"): ("/auth/login/?next=" + reverse("new_post")),
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): (
+                "/auth/login/?next="
+                + reverse(
+                    "post_edit",
+                    kwargs={
+                        "username": PostURLTests.author,
+                        "post_id": PostURLTests.post.id,
+                    },
+                )
+            ),
+            reverse(
+                "add_comment",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ): (
+                "/auth/login/?next="
+                + reverse(
+                    "add_comment",
+                    kwargs={
+                        "username": PostURLTests.author,
+                        "post_id": PostURLTests.post.id,
+                    },
+                )
+            ),
         }
         for route, target in url_routes.items():
             with self.subTest():
@@ -123,16 +198,24 @@ class PostURLTests(TestCase):
     def test_post_id_edit_url_redirect_authorized_on_post_id(self):
         """Страница /username/post_id/edit/ перенаправит авторизированного
         пользователя (не автора поста) на страницу поста"""
-        post = PostURLTests.post
-        author = PostURLTests.author
-
         response = self.authorized_client.get(
-            f"/{author.username}/{post.id}/edit/", follow=True
+            reverse(
+                "post_edit",
+                kwargs={
+                    "username": PostURLTests.author,
+                    "post_id": PostURLTests.post.id,
+                },
+            ),
+            follow=True,
         )
-        self.assertRedirects(
-            response,
-            f"/{author.username}/{post.id}/",
+        path = reverse(
+            "post",
+            kwargs={
+                "username": PostURLTests.author,
+                "post_id": PostURLTests.post.id,
+            },
         )
+        self.assertRedirects(response, path)
 
 
 class GroupURLTests(TestCase):
@@ -152,15 +235,21 @@ class GroupURLTests(TestCase):
 
     def test_group_url_exists_at_desired_location_anonymous(self):
         """Страница /group/test-slug/ доступна любому пользователю"""
-        response = self.guest_client.get("/group/test-slug/")
+        response = self.guest_client.get(
+            reverse("group", kwargs={"slug": "test-slug"})
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_group_url_exists_at_desired_location_authorized(self):
         """Страница /group/test-slug/ доступна авторизированному пользователю"""
-        response = self.authorized_client.get("/group/test-slug/")
+        response = self.authorized_client.get(
+            reverse("group", kwargs={"slug": "test-slug"})
+        )
         self.assertEqual(response.status_code, 200)
 
     def test_group_url_uses_correct_template(self):
         """URL-адрес использует соответствующий шаблон"""
-        response = self.guest_client.get("/group/test-slug/")
+        response = self.guest_client.get(
+            reverse("group", kwargs={"slug": "test-slug"})
+        )
         self.assertTemplateUsed(response, "group.html")
