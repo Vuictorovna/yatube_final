@@ -4,7 +4,7 @@
 Пользователи смогут заходить на чужие страницы, подписываться на понравившихся авторов и комментировать их записи.
 ***
 **"Yatube"** is a social network for publishing personal diaries.
-On this web site you can create your own page and share your thoughts or life events with subscribers attaching illustrations to publications. Moreover, on the author's page you can see all their posts.
+On this web site you can create your own page and share your thoughts or life events with subscribers attaching illustrations to publications. Moreover, on the author's page you can also see all their posts.
 Users are able to visit other's pages, subscribe to the authors they like and leave comments.
 
 ### Технологии/ Technology:
